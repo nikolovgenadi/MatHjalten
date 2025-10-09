@@ -1,0 +1,25 @@
+{
+  // FORMAT
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+
+  // ESLINT: show problems, but let Prettier do the formatting
+  "eslint.enable": true,
+  "eslint.format.enable": false,
+  "eslint.rules.customizations": [{ "rule": "*", "severity": "warn" }],
+
+  // FILES
+  "files.eol": "\n",
+  "files.insertFinalNewline": true,
+
+  // TABS / INDENT
+  "editor.tabSize": 2,
+  "editor.detectIndentation": false,
+
+  // JAVASCRIPT/REACT QUALITY
+  "javascript.suggest.autoImports": true,
+  "typescript.suggest.autoImports": true,
+
+  // THUNDER CLIENT (optional)
+  "thunder-client.saveToWorkspace": true
+}

@@ -1,0 +1,17 @@
+{
+  "recommendations": [
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "EditorConfig.EditorConfig",
+    "mikestead.dotenv",
+    "christian-kohler.path-intellisense",
+    "christian-kohler.npm-intellisense",
+    "mongodb.mongodb-vscode",
+    "rangav.vscode-thunder-client",
+    "dsznajder.es7-react-js-snippets",
+    "formulahendry.auto-rename-tag",
+    "eamodio.gitlens",
+    "usernamehw.errorlens",
+    "yzhang.markdown-all-in-one"
+  ]
+}
