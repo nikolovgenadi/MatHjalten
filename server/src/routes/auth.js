@@ -48,3 +48,26 @@ router.post("/register", async (req, res) => {
     return res.status(500).json({ error: "Server error" });
   }
 });
+
+// LOGIN ROYUTER
+router.post("/login", async (req, res) => {
+  try {
+    const { email, password } = loginSchema.parse(req.body);
+    const user = await User.findOne({ email });
+    if (!user) return res.status(401).json({ error: "Invalid credentials" });
+
+    const ok = await bcrypt.compare(password, user.passwordHash);
+    if (!ok) return res.status(401).json({ error: "invalid credentials" });
+
+    const token = signToken(user._id.toString());
+    setAuthCookie(res, token);
+    return res.json({ user: { id: user._id, name: user.name, email: user.email } });
+  } catch (err) {
+    if (err instanceof z.ZodError) {
+      return res.status(400).json({ error: "invalid input", details: err.errors });
+    }
+    console.log(err);
+    return res.status(500).json({ error: "server error", details: err.errors });
+  }
+});
+
