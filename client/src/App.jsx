@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react"; // React built-in hooks
-import './App.css'
 
 export default function App() {
   const [health, setHealth] = useState(null);

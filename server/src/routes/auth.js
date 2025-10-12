@@ -1,28 +1,26 @@
 import { Router } from "express";
 import bcrypt from "bcryptjs";
 import z from "zod";
-import { User } from "../models/User.js";
-import { signToken, setAuthCookie, clearAuthCookie } from "../utils/auth.js";
+import User from "../models/User.js";
+import { signToken, setAuthCookie, clearAuthCookies } from "../utils/jwt.js";
 import mongoose from "mongoose";
 
 const router = Router();
 
 // register schema
-const registerSchema = z
-  .object({
-    name: z.string().min(2).max(60),
-    email: z.string().email(),
-    password: z.string().min(6).max(100),
-    confirmPassword: z.string().min(6).max(100),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords don't match",
-    path: ["confirmPassword"],
-  });
+const registerSchema = z.object({
+  name: z.string().min(2).max(60),
+  email: z.string().refine((val) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val), {
+    message: "Invalid email address",
+  }),
+  password: z.string().min(6).max(100),
+});
 
 // login schema
 const loginSchema = z.object({
-  email: z.string().email(),
+  email: z.string().refine((val) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val), {
+    message: "Invalid email address",
+  }),
   password: z.string().min(6).max(100),
 });
 //REGISTER ROUTER
@@ -71,3 +69,38 @@ router.post("/login", async (req, res) => {
   }
 });
 
+// router me for current user
+router.get("/me", async (req, res) => {
+  try {
+    const token = req.cookies.auth;
+    if (!token) return res.status(200).json({ user: null });
+
+    const { sub } = await (async () => {
+      try {
+        return jwtVerify(token);
+      } catch {
+        return {};
+      }
+    })();
+
+    if (!sub || !mongoose.isValidObjectId(sub)) return res.status(200).json({ user: null });
+    const user = await User.findById(sub).select("_id name email");
+    return res.json({ user: user ? { id: user._id, name: user.name, email: user.email } : null });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({ error: "server error" });
+  }
+});
+
+// logout router
+router.post("/logout", (_req, res) => {
+  clearAuthCookies(res);
+  return res.json({ ok: true });
+});
+
+async function jwtVerify(token) {
+  const jwt = await import("jsonwebtoken");
+  return jwt.default.verify(token, process.env.JWT_SECRET);
+}
+
+export default router;
