@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { register } from "../api/auth.js";
 
 export default function Register() {
   const [form, setForm] = useState({ name: "", email: "", password: "" });
@@ -18,7 +19,7 @@ export default function Register() {
       credentials: "include",
       body: JSON.stringify(form),
     });
-    const data = await res.json();
+    const data = await register(form.name, form.email, form.password);
     if (!res.ok) return setMsg(data.error || "an error occured");
     setMsg(`Welcome ${data.user.name}!`);
   }

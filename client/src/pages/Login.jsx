@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { login } from "../api/auth.js";
 
 export default function Login() {
   const [form, setForm] = useState({ email: "", password: "" });
@@ -16,7 +17,7 @@ export default function Login() {
       credentials: "include",
       body: JSON.stringify(form),
     });
-    const data = await res.json();
+    const data = await login(form.email, form.password);
     if (!res.ok) return setMsg(data.error || "an error occured");
     setMsg(`welcome back ${data.user.name}!`);
   }

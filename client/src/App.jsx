@@ -13,7 +13,7 @@ export default function App() {
       .then(setHealth)
       .catch((err) => {
         setError(err.message);
-        setHealth({ ok: false, error: "Server unavailable" });
+        setHealth({ ok: false, error: "server unavailable" });
       });
   }, []);
 
