@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { login } from "../api/auth.js";
 
 export default function Login() {
   const [form, setForm] = useState({ email: "", password: "" });
@@ -17,7 +16,7 @@ export default function Login() {
       credentials: "include",
       body: JSON.stringify(form),
     });
-    const data = await login(form.email, form.password);
+    const data = await res.json();
     if (!res.ok) return setMsg(data.error || "an error occured");
     setMsg(`welcome back ${data.user.name}!`);
   }
@@ -28,15 +27,9 @@ export default function Login() {
       <form onSubmit={submit}>
         <input name="email" placeholder="Email" value={form.email} onChange={onChange} required />{" "}
         <br />
-        <input
-          name="password"
-          placeholder="Password"
-          value={form.password}
-          onChange={onChange}
-          required
-        />{" "}
+        <input name="password" type="password" value={form.password} onChange={onChange} required />
         <br />
-        <button type="button">Login</button>
+        <button type="submit">Login</button>
       </form>
       <p>{msg}</p>
     </div>

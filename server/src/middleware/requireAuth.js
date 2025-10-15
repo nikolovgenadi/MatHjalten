@@ -1,12 +1,12 @@
 import jwt from "jsonwebtoken";
 
-// appratenly will need for protected routes later
+// for protected routes later
 
 export function requireAuth(req, res, next) {
   const token = req.cookies?.auth;
-  if (!token) return res.status(401).json({ error: "not authenticated yo" });
+  if (!token) return res.status(401).json({ error: "not authenticated" });
   try {
-    const payload = JsonWebTokenError.verify(token, process.env.JWT_SECRET);
+    const payload = jwt.verify(token, process.env.JWT_SECRET);
     req.userId = payload.sub;
     next();
   } catch {

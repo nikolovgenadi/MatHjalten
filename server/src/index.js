@@ -8,6 +8,7 @@ import { fileURLToPath } from "node:url";
 import { connectDB } from "./utils/db.js";
 import healthRouter from "./routes/health.js";
 import authRouter from "./routes/auth.js";
+import adsRouter from "./routes/ads.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -26,6 +27,7 @@ if (process.env.NODE_ENV !== "production") {
 // API routes
 app.use("/api/health", healthRouter);
 app.use("/api/auth", authRouter);
+app.use("/api/ads", adsRouter);
 
 // for production (dist)
 // const clientDistPath = path.resolve(__dirname, "../../client/dist");
