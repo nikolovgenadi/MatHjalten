@@ -6,6 +6,7 @@ import { requireAuth } from "../middleware/requireAuth.js";
 import { ca } from "zod/v4/locales";
 
 const router = Router();
+
 // create ad
 const createAdSchema = z.object({
   title: z.string().min(2).max(100),

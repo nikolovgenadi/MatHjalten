@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 
-// for protected routes later
+// for protected routes
 
 export function requireAuth(req, res, next) {
   const token = req.cookies?.auth;
