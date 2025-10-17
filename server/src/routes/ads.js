@@ -12,7 +12,13 @@ const createAdSchema = z.object({
   title: z.string().min(2).max(100),
   description: z.string().min(10).max(1000),
   category: z.string().min(2).max(50),
-  expiresAt: z.string().refine((val) => !isNaN(Date.parse(val)), { message: "Invalid date" }),
+  expiresAt: z.string().refine(
+    (val) => {
+      const date = new Date(val);
+      return !isNaN(date.getTime()) && date > new Date();
+    },
+    { message: "Invalid date or date must be in the future" }
+  ),
   locationText: z.string().min(8).max(200),
 });
 
@@ -34,7 +40,8 @@ const listQuerySchema = z.object({
   title: z.string().min(1).max(100).optional(),
   category: z.string().min(1).max(50).optional(),
   location: z.string().min(1).max(100).optional(),
-  category: z.coerce.string().optional(),
+  page: z.coerce.number().min(1).default(1),
+  limit: z.coerce.number().min(1).max(100).default(10),
 });
 
 // create ad auth required
@@ -44,12 +51,12 @@ router.post("/", requireAuth, async (req, res) => {
     const doc = await Ad.create({
       ownerId: req.userId,
       title: body.title,
-      description: body.description ?? "",
-      category: body.category ?? "",
-      expiresAt: body.expiresAt ? new Date(body.expiresAt) : undefined,
+      description: body.description,
+      category: body.category,
+      expiresAt: new Date(body.expiresAt),
       locationText: body.locationText,
     });
-    return res.status(201).json({ ad: doc });
+    return res.status(201).json({ ad: serialize(doc) });
   } catch (err) {
     if (err instanceof z.ZodError)
       return res.status(400).json({ error: "invalid input", details: err.errors });
@@ -69,7 +76,7 @@ router.get("/", async (req, res) => {
       filter.status = "available";
     }
     const skip = (query.page - 1) * query.limit;
-    const docs = (await Ad.find(filter)).sort({ createdAt: -1 }).skip(skip).limit(query.limit);
+    const docs = await Ad.find(filter).sort({ createdAt: -1 }).skip(skip).limit(query.limit);
     return res.json({ items: docs.map(serialize), page: query.page, limit: query.limit });
   } catch (err) {
     if (err instanceof z.ZodError)
@@ -90,13 +97,13 @@ router.get("/:id", async (req, res) => {
 });
 
 // UPDATE OWN AD AUTH
-router.patch("/:id", async (req, res) => {
+router.patch("/:id", requireAuth, async (req, res) => {
   if (!mongoose.isValidObjectId(req.params.id))
     return res.status(400).json({ error: "invalid id" });
   try {
     const body = updateAdSchema.parse(req.body);
-    const doc = await Ad.findById(req.params.id, { ownerId: req.userId });
-    if (!doc) return res.status(404).json({ error: "ad not found" });
+    const doc = await Ad.findOne({ _id: req.params.id, ownerId: req.userId });
+    if (!doc) return res.status(404).json({ error: "ad not found or not yours" });
     if (body.title != null) doc.title = body.title;
     if (body.description != null) doc.description = body.description;
     if (body.category != null) doc.category = body.category;
@@ -122,19 +129,29 @@ router.delete("/:id", requireAuth, async (req, res) => {
   return res.json({ ok: true });
 });
 
+// list ads for logged in user
+router.get("/mine", requireAuth, async (req, res) => {
+  try {
+    const docs = await Ad.find({ ownerId: req.userId }).sort({ createdAt: -1 });
+    return res.json({ items: docs.map(serialize) });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: "server error" });
+  }
+});
+
 function serialize(doc) {
   return {
-    id: ad._id,
-    ownerId: ad.ownerId,
-    title: ad.title,
-    description: ad.description,
-    category: ad.category,
-    expiresAt: ad,
-    expiresAt,
-    status: ad.status,
-    locationText: ad.locationText,
-    createdAt: ad.createdAt,
-    updatedAt: ad.updatedAt,
+    id: doc._id.toString(),
+    ownerId: doc.ownerId.toString(),
+    title: doc.title,
+    description: doc.description,
+    category: doc.category,
+    expiresAt: doc.expiresAt,
+    status: doc.status,
+    locationText: doc.locationText,
+    createdAt: doc.createdAt,
+    updatedAt: doc.updatedAt,
   };
 }
 

@@ -30,6 +30,13 @@ export default function NewAd() {
     });
     const data = await res.json();
     if (!res.ok) return setMsg(data.error || "an error occured");
+
+    // Check if we have the ad data
+    if (!data.ad || !data.ad.id) {
+      console.error("Unexpected response:", data);
+      return setMsg("Ad created but couldn't redirect");
+    }
+
     setMsg("created ad");
     window.location.href = `/ads/${data.ad.id}`;
   }
