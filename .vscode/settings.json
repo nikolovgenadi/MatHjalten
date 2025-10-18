@@ -20,8 +20,6 @@
   "javascript.suggest.autoImports": true,
   "typescript.suggest.autoImports": true,
 
-  // THUNDER CLIENT (optional)
-  "thunder-client.saveToWorkspace": true,
   "[javascriptreact]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   }

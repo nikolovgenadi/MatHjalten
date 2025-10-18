@@ -48,14 +48,16 @@ const listQuerySchema = z.object({
 router.post("/", requireAuth, async (req, res) => {
   try {
     const body = createAdSchema.parse(req.body);
+    console.log("Creating ad for user:", req.userId); // Debug log
     const doc = await Ad.create({
-      ownerId: req.userId,
+      ownerId: new mongoose.Types.ObjectId(req.userId),
       title: body.title,
       description: body.description,
       category: body.category,
       expiresAt: new Date(body.expiresAt),
       locationText: body.locationText,
     });
+    console.log("Created ad:", doc._id, "for owner:", doc.ownerId); // Debug log
     return res.status(201).json({ ad: serialize(doc) });
   } catch (err) {
     if (err instanceof z.ZodError)
@@ -86,6 +88,21 @@ router.get("/", async (req, res) => {
   }
 });
 
+// list ads for logged in user
+router.get("/mine", requireAuth, async (req, res) => {
+  try {
+    console.log("Fetching ads for user:", req.userId);
+    const docs = await Ad.find({ ownerId: new mongoose.Types.ObjectId(req.userId) }).sort({
+      createdAt: -1,
+    });
+    console.log("Found", docs.length, "ads for user:", req.userId);
+    return res.json({ items: docs.map(serialize) });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: "server error" });
+  }
+});
+
 // get ad by id
 router.get("/:id", async (req, res) => {
   if (!mongoose.isValidObjectId(req.params.id))
@@ -102,7 +119,10 @@ router.patch("/:id", requireAuth, async (req, res) => {
     return res.status(400).json({ error: "invalid id" });
   try {
     const body = updateAdSchema.parse(req.body);
-    const doc = await Ad.findOne({ _id: req.params.id, ownerId: req.userId });
+    const doc = await Ad.findOne({
+      _id: req.params.id,
+      ownerId: new mongoose.Types.ObjectId(req.userId),
+    });
     if (!doc) return res.status(404).json({ error: "ad not found or not yours" });
     if (body.title != null) doc.title = body.title;
     if (body.description != null) doc.description = body.description;
@@ -124,20 +144,12 @@ router.patch("/:id", requireAuth, async (req, res) => {
 router.delete("/:id", requireAuth, async (req, res) => {
   if (!mongoose.isValidObjectId(req.params.id))
     return res.status(400).json({ error: "invalid id" });
-  const doc = await Ad.findOneAndDelete({ _id: req.params.id, ownerId: req.userId });
+  const doc = await Ad.findOneAndDelete({
+    _id: req.params.id,
+    ownerId: new mongoose.Types.ObjectId(req.userId),
+  });
   if (!doc) return res.status(404).json({ error: "ad not found or you didn't post it" });
   return res.json({ ok: true });
-});
-
-// list ads for logged in user
-router.get("/mine", requireAuth, async (req, res) => {
-  try {
-    const docs = await Ad.find({ ownerId: req.userId }).sort({ createdAt: -1 });
-    return res.json({ items: docs.map(serialize) });
-  } catch (err) {
-    console.error(err);
-    return res.status(500).json({ error: "server error" });
-  }
 });
 
 function serialize(doc) {

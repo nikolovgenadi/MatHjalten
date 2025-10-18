@@ -8,7 +8,7 @@ export default function AdDetail() {
 
   useEffect(() => {
     const url = import.meta.env.PROD ? `/api/ads/${id}` : `http://localhost:8080/api/ads/${id}`;
-    fetch(url)
+    fetch(url, { credentials: "include" })
       .then((res) => res.json())
       .then((data) => {
         setAd(data.ad);

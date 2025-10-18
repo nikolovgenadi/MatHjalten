@@ -7,7 +7,7 @@ export default function AdsList() {
   useEffect(() => {
     const url = import.meta.env.PROD ? "/api/ads" : "http://localhost:8080/api/ads";
     setMsg("loading...");
-    fetch(url)
+    fetch(url, { credentials: "include" })
       .then((res) => res.json())
       .then((data) => {
         setItems(data.items || []);
