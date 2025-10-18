@@ -1,42 +1,39 @@
-import { useEffect, useState } from "react"; // React built-in hooks
-import { Link } from "react-router-dom";
+import { useState } from "react";
 import { useAuth } from "./hooks/useAuth.js";
+import { Navbar } from "./components/Navbar.jsx";
+import AdsList from "./pages/ads/AdsList.jsx";
+import MyAds from "./pages/ads/MyAds.jsx";
+import NewAd from "./pages/ads/NewAd.jsx";
+import Login from "./pages/Login.jsx";
+import Register from "./pages/Register.jsx";
 
 export default function App() {
-  const [health, setHealth] = useState(null);
-  const [error, setError] = useState(null);
   const user = useAuth();
+  const [currentView, setCurrentView] = useState("viewads");
 
-  useEffect(() => {
-    const url = import.meta.env.PROD ? "/api/health" : "http://localhost:8080/api/health";
-
-    fetch(url, { credentials: "include" })
-      .then((r) => r.json())
-      .then(setHealth)
-      .catch((err) => {
-        setError(err.message);
-        setHealth({ ok: false, error: "server unavailable" });
-      });
-  }, []);
+  // Render the current view component with menu navigation
+  const renderCurrentView = () => {
+    switch (currentView) {
+      case "viewads":
+        return <AdsList />;
+      case "myads":
+        return <MyAds />;
+      case "new":
+        return <NewAd />;
+      case "login":
+        return <Login />;
+      case "register":
+        return <Register />;
+      default:
+        return <AdsList />;
+    }
+  };
 
   return (
-    <div style={{ fontFamily: "system-ui", padding: 16 }}>
-      <h1>MatHjälten</h1>
-      <p>
-        {user ? (
-          <>
-            Welcome {user.name}! · <Link to="/ads/mine">My Ads</Link> ·{" "}
-            <Link to="/ads/new">Post new Ad</Link>
-          </>
-        ) : (
-          <>
-            <Link to="/register">Register</Link> · <Link to="/login">Login</Link>
-          </>
-        )}
-      </p>
-      <h2>Server health</h2>
-      {error && <p style={{ color: "crimson" }}>⚠️ {error}</p>}
-      <pre>{health ? JSON.stringify(health, null, 2) : "Loading..."}</pre>
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      <main className="flex-1 overflow-y-auto pb-20">{renderCurrentView()}</main>
+
+      <Navbar currentView={currentView} onViewChange={setCurrentView} />
     </div>
   );
 }

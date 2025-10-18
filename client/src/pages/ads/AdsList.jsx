@@ -16,10 +16,10 @@ export default function AdsList() {
       .catch(() => setMsg("failed to load"));
   }, []);
 
+  if (msg) return <p className="text-center text-gray-500">{msg}</p>;
+
   return (
     <div style={{ padding: 20 }}>
-      <h1>Food for saving:</h1>
-      {msg && <p>{msg}</p>}
       <ul>
         {items.map((a) => (
           <li key={a.id}>
