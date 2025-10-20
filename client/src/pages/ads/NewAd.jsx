@@ -42,28 +42,141 @@ export default function NewAd() {
   }
 
   return (
-    <div style={{ padding: 20 }}>
-      <h1>Create New Ad</h1>
-      <form onSubmit={submit}>
-        <input type="text" name="title" placeholder="Title" onChange={onChange} required />
-        <br />
-        <textarea name="description" placeholder="Description" onChange={onChange} required />
-        <br />
-        <input type="text" name="category" placeholder="Category" onChange={onChange} required />
-        <br />
-        <input type="date" name="expiresAt" onChange={onChange} required />
-        <br />
-        <input
-          type="text"
-          name="locationText"
-          placeholder="Pick-up address (city, street)"
-          onChange={onChange}
-          required
-        />
-        <br />
-        <button type="submit">Create Ad</button>
-      </form>
-      {msg && <p>{msg}</p>}
+    <div className="min-h-screen bg-gradient-to-br bg-blue-700 p-4">
+      <div className="max-w-2xl mx-auto">
+        {/* header */}
+        <div className="text-center pt-4 mb-8">
+          <h1 className="text-3xl font-bold text-white mb-2">Create New Ad</h1>
+          <p className="text-white">No food or drink should go to waste</p>
+        </div>
+
+        {/* form container */}
+        <div className="bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden">
+          <form onSubmit={submit} className="p-8 space-y-6">
+            {/* title */}
+            <div className="group">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Ad Title</label>
+              <input
+                type="text"
+                name="title"
+                value={form.title}
+                placeholder="e.g. Unopened Bananaskids"
+                onChange={onChange}
+                required
+                className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl 
+                          focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-100
+                          transition-all duration-300 shadow-inner hover:border-gray-300
+                          placeholder-gray-400 text-gray-800"
+              />
+            </div>
+
+            {/* description */}
+            <div className="group">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Description</label>
+              <textarea
+                name="description"
+                value={form.description}
+                placeholder="Describe the food/drink, quantity..."
+                onChange={onChange}
+                required
+                rows={4}
+                className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl 
+                          focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-100
+                          transition-all duration-300 shadow-inner hover:border-gray-300
+                          placeholder-gray-400 text-gray-800 resize-none"
+              />
+            </div>
+
+            {/* category and date */}
+            <div className="flex flex-wrap gap-4 items-end">
+              <div className="group flex-shrink-0">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Category</label>
+                <select
+                  name="category"
+                  value={form.category}
+                  onChange={onChange}
+                  required
+                  className="w-32 px-2 py-2 bg-gray-50 border-2 border-gray-200 rounded-lg text-sm
+                            focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-100
+                            transition-all duration-300 shadow-inner hover:border-gray-300
+                            text-gray-800 cursor-pointer"
+                >
+                  <option value="">Select category</option>
+                  <option value="food">Food</option>
+                  <option value="drink">Drink</option>
+                </select>
+              </div>
+
+              <div className="group flex-shrink-0">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Expires On</label>
+                <input
+                  type="date"
+                  name="expiresAt"
+                  value={form.expiresAt}
+                  onChange={onChange}
+                  required
+                  min={new Date().toISOString().split("T")[0]}
+                  className="w-40 px-2 py-2 bg-gray-50 border-2 border-gray-200 rounded-lg text-sm
+                            focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-100
+                            transition-all duration-300 shadow-inner hover:border-gray-300
+                            text-gray-800"
+                />
+              </div>
+            </div>
+
+            {/* location */}
+            <div className="group">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Pickup Location
+              </label>
+              <input
+                type="text"
+                name="locationText"
+                value={form.locationText}
+                placeholder="e.g. Stockholm, Sweden"
+                onChange={onChange}
+                required
+                className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl 
+                          focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-100
+                          transition-all duration-300 shadow-inner hover:border-gray-300
+                          placeholder-gray-400 text-gray-800"
+              />
+            </div>
+
+            {/* submit form */}
+            <div className="pt-4">
+              <button
+                type="submit"
+                disabled={!!msg && msg === "loading..."}
+                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold py-4 px-8 
+                          rounded-xl shadow-lg hover:shadow-xl hover:from-blue-700 hover:to-indigo-700"
+              >
+                {msg === "loading..." ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                    Creating Ad...
+                  </span>
+                ) : (
+                  <span className="flex items-center justify-center gap-2">Create Ad</span>
+                )}
+              </button>
+            </div>
+
+            {/* status message */}
+            {msg && msg !== "loading..." && (
+              <div
+                className={`mt-4 p-4 text-center font-medium ${
+                  msg.includes("error") || msg.includes("failed")
+                    ? "bg-red-50 text-red-700 border border-red-200"
+                    : "bg-red-50 text-red-700 border border-red-200"
+                }`}
+              >
+                {msg}
+              </div>
+            )}
+          </form>
+        </div>
+      </div>
     </div>
   );
 }

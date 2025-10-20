@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import { Utensils, CupSoda } from "lucide-react";
 
 export default function AdDetail() {
   const { id } = useParams();
@@ -22,7 +23,11 @@ export default function AdDetail() {
     <div style={{ padding: 20 }}>
       <h1>{ad.title}</h1>
       <p>{ad.description}</p>
-      <p>Category: {ad.category || "-"}</p>
+      <p>
+        Category:{" "}
+        {ad.category === "food" ? <Utensils /> : ad.category === "drink" ? <CupSoda /> : ""}{" "}
+        {ad.category || "uncategorized"}
+      </p>
       <br />
       <p>Expires At: {ad.expiresAt}</p> <br />
       <p>Status: {ad.status}</p> <br />

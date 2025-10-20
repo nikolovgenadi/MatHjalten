@@ -1,21 +1,48 @@
 import { useState } from "react";
 import { useAuth } from "./hooks/useAuth.js";
-import { Navbar } from "./components/Navbar.jsx";
+import { BottomNavigation } from "./components/BottomNavigation.jsx";
+import { SearchFilter } from "./components/SearchFilter.jsx";
+import { ProfileModal } from "./components/ProfileModal.jsx";
 import AdsList from "./pages/ads/AdsList.jsx";
 import MyAds from "./pages/ads/MyAds.jsx";
 import NewAd from "./pages/ads/NewAd.jsx";
 import Login from "./pages/Login.jsx";
 import Register from "./pages/Register.jsx";
+import Messages from "./pages/Messages.jsx";
 
 export default function App() {
   const user = useAuth();
   const [currentView, setCurrentView] = useState("viewads");
+  const [profileModalOpen, setProfileModalOpen] = useState(false);
+  const [searchFilters, setSearchFilters] = useState({
+    searchTerm: "",
+    category: "all",
+    status: "all",
+    sortByExpiry: "nearest",
+  });
 
-  // Render the current view component with menu navigation
+  const handleViewChange = (view) => {
+    if (view === "profile") {
+      setCurrentView("profile");
+      setProfileModalOpen(true);
+    } else {
+      setCurrentView(view);
+      setProfileModalOpen(false);
+    }
+  };
+
+  // render current view component
   const renderCurrentView = () => {
     switch (currentView) {
       case "viewads":
-        return <AdsList />;
+        return <AdsList searchFilters={searchFilters} />;
+      case "search":
+        return (
+          <>
+            <SearchFilter onFiltersChange={setSearchFilters} />
+            <AdsList searchFilters={searchFilters} />
+          </>
+        );
       case "myads":
         return <MyAds />;
       case "new":
@@ -24,16 +51,28 @@ export default function App() {
         return <Login />;
       case "register":
         return <Register />;
+      case "messages":
+        return <Messages />;
       default:
-        return <AdsList />;
+        return <AdsList searchFilters={searchFilters} />;
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      <main className="flex-1 overflow-y-auto pb-20">{renderCurrentView()}</main>
+    <div className="min-h-screen bg-blue-700 flex flex-col">
+      {/* main content */}
+      <main className="flex-1 bg-blue-700 overflow-y-auto pb-20">{renderCurrentView()}</main>
 
-      <Navbar currentView={currentView} onViewChange={setCurrentView} />
+      {/* bottom navigation */}
+      <BottomNavigation currentView={currentView} onViewChange={handleViewChange} />
+
+      {/* profile modal */}
+      <ProfileModal
+        isOpen={profileModalOpen}
+        onClose={() => setProfileModalOpen(false)}
+        user={user}
+        onViewChange={setCurrentView}
+      />
     </div>
   );
 }

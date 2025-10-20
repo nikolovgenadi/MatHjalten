@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { CalendarX2, MapPin, Eye, Trash2, CupSoda, Utensils } from "lucide-react";
 
 export default function MyAds() {
   const [ads, setAds] = useState([]);
@@ -6,16 +7,18 @@ export default function MyAds() {
 
   useEffect(() => {
     const url = import.meta.env.PROD ? "/api/ads/mine" : "http://localhost:8080/api/ads/mine";
+    setMsg("loading...");
     fetch(url, { credentials: "include" })
       .then((res) => res.json())
       .then((data) => {
         setAds(data.items || []);
+        setMsg("");
       })
       .catch(() => setMsg("failed to load"));
   }, []);
 
   async function del(id) {
-    if (!confirm("delete this ad?")) return;
+    if (!confirm("Are you sure you want to delete this ad?")) return;
     const url = import.meta.env.PROD ? `/api/ads/${id}` : `http://localhost:8080/api/ads/${id}`;
     const res = await fetch(url, { method: "DELETE", credentials: "include" });
     if (res.ok) {
@@ -23,19 +26,101 @@ export default function MyAds() {
     }
   }
 
+  // const viewAd = (id) => {
+  //   console.log(`View ad ${id}`);
+  // };
+
+  if (msg) return <p className="text-center text-gray-500 p-8">{msg}</p>;
+
   return (
-    <div style={{ padding: 20 }}>
-      <h1>My Ads</h1>
-      {msg && <p>{msg}</p>}
-      {ads.map((ad) => (
-        <div key={ad.id} style={{ marginBottom: 10, borderBottom: "1px solid #000000ff" }}>
-          {ad.title} <br />
-          {ad.locationText}
-          <button onClick={() => (window.location.href = `/ads/${ad.id}`)}>View</button>
-          <button onClick={() => del(ad.id)}>Delete</button>
+    <div className="p-4 space-y-4">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-800">My Ads</h1>
+        <p className="text-gray-600 text-sm">Manage your current ads.</p>
+      </div>
+
+      {ads.length > 0 ? (
+        <div className="space-y-3">
+          {ads.map((a) => (
+            <div key={a.id} className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+              <div className="flex justify-between items-start gap-3">
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-1 truncate" title={a.title}>
+                    {a.title}
+                  </h3>
+                  <p className="text-sm text-gray-600 mb-2 line-clamp-2" title={a.description}>
+                    {a.description}
+                  </p>
+                  <div className="flex items-center gap-4 text-xs text-gray-500 flex-wrap">
+                    <span
+                      className="flex items-center gap-1 truncate max-w-[120px]"
+                      title={a.locationText}
+                    >
+                      <MapPin size={18} className="text-blue-600" strokeWidth={1.5} />
+                      {a.locationText}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      {a.category === "food" ? (
+                        <Utensils size={18} className="text-blue-600" strokeWidth={1.5} />
+                      ) : a.category === "drink" ? (
+                        <CupSoda size={18} className="text-blue-600" strokeWidth={1.5} />
+                      ) : (
+                        ""
+                      )}{" "}
+                      {a.category || "uncategorized"}
+                    </span>
+                    <span className="flex items-center gap-1 whitespace-nowrap">
+                      <CalendarX2 size={18} className="text-blue-600" strokeWidth={1.5} />
+                      Expires: {new Date(a.expiresAt).toLocaleDateString()}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-2 ml-4">
+                  {/* status */}
+                  <span
+                    className={`px-2 py-1 rounded-full text-xs font-medium text-center ${
+                      a.status === "available"
+                        ? "bg-green-100 text-green-800"
+                        : a.status === "reserved"
+                        ? "bg-yellow-100 text-yellow-800"
+                        : "bg-red-100 text-red-800"
+                    }`}
+                  >
+                    {a.status}
+                  </span>
+
+                  {/* view ad button soon to be added? and edit? */}
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => viewAd(a.id)}
+                      className="flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100 transition-colors text-xs font-medium"
+                      title="View ad details"
+                    >
+                      <Eye size={18} strokeWidth={1.5} />
+                      View
+                    </button>
+                    {/* delete ad button */}
+                    <button
+                      onClick={() => del(a.id)}
+                      className="flex items-center gap-1 px-2 py-1 bg-red-50 text-red-600 rounded-md hover:bg-red-100 transition-colors text-xs font-medium"
+                      title="Delete this ad"
+                    >
+                      <Trash2 size={18} strokeWidth={1.5} />
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
-      ))}
-      {!ads.length && !msg && <p>No ads yet.</p>}
+      ) : (
+        <div className="text-center py-12">
+          <h2 className="text-xl font-semibold text-gray-800 mb-2">No ads yet</h2>
+          <p className="text-gray-600 mb-6">You have no created ads yet.</p>
+        </div>
+      )}
     </div>
   );
 }
