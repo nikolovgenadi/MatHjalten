@@ -57,7 +57,6 @@ export default function AdsList({ searchFilters }) {
 
   return (
     <div className="p-4 space-y-4">
-      <Header></Header>
       {filteredItems.length > 0 ? (
         <div className="space-y-3">
           {filteredItems.map((a) => (

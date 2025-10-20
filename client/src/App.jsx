@@ -3,6 +3,7 @@ import { useAuth } from "./hooks/useAuth.js";
 import { BottomNavigation } from "./components/BottomNavigation.jsx";
 import { SearchFilter } from "./components/SearchFilter.jsx";
 import { ProfileModal } from "./components/ProfileModal.jsx";
+import { Header } from "./components/Header.jsx";
 import AdsList from "./pages/ads/AdsList.jsx";
 import MyAds from "./pages/ads/MyAds.jsx";
 import NewAd from "./pages/ads/NewAd.jsx";
@@ -35,7 +36,12 @@ export default function App() {
   const renderCurrentView = () => {
     switch (currentView) {
       case "viewads":
-        return <AdsList searchFilters={searchFilters} />;
+        return (
+          <>
+            <Header />
+            <AdsList searchFilters={searchFilters} />
+          </>
+        );
       case "search":
         return (
           <>
