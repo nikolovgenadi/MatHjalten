@@ -33,13 +33,7 @@ app.use("/api/auth", authRouter);
 app.use("/api/ads", adsRouter);
 
 // for production (dist)
-// const clientDistPath = path.resolve(__dirname, "../../client/dist");
-// app.use(express.static(clientDistPath));
-// app.get(/^\/(?!api).*/, (req, res) => {
-//   res.sendFile(path.join(clientDistPath, "index.html"));
-// });
-
-const clientDistPath = path.resolve(__dirname, "../../client");
+const clientDistPath = path.resolve(__dirname, "../../client/dist");
 app.use(express.static(clientDistPath));
 app.get(/^\/(?!api).*/, (req, res) => {
   res.sendFile(path.join(clientDistPath, "index.html"));
