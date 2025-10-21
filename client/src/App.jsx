@@ -12,7 +12,7 @@ import Register from "./pages/Register.jsx";
 import Messages from "./pages/Messages.jsx";
 
 export default function App() {
-  const user = useAuth();
+  const { user, logout } = useAuth();
   const [currentView, setCurrentView] = useState("viewads");
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [searchFilters, setSearchFilters] = useState({
@@ -29,6 +29,16 @@ export default function App() {
     } else {
       setCurrentView(view);
       setProfileModalOpen(false);
+
+      // reset search filters when navigating to home tab
+      if (view === "viewads") {
+        setSearchFilters({
+          searchTerm: "",
+          category: "all",
+          status: "all",
+          sortByExpiry: "nearest",
+        });
+      }
     }
   };
 
@@ -54,9 +64,9 @@ export default function App() {
       case "new":
         return <NewAd />;
       case "login":
-        return <Login />;
+        return <Login onSuccess={() => handleViewChange("viewads")} />;
       case "register":
-        return <Register />;
+        return <Register onSuccess={() => handleViewChange("viewads")} />;
       case "messages":
         return <Messages />;
       default:
@@ -67,7 +77,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-blue-700 flex flex-col">
       {/* main content */}
-      <main className="flex-1 bg-blue-700 overflow-y-auto pb-20">{renderCurrentView()}</main>
+      <main className="flex-1 bg-blue-700 overflow-y-auto">{renderCurrentView()}</main>
 
       {/* bottom navigation */}
       <BottomNavigation currentView={currentView} onViewChange={handleViewChange} />
@@ -78,6 +88,7 @@ export default function App() {
         onClose={() => setProfileModalOpen(false)}
         user={user}
         onViewChange={setCurrentView}
+        onLogout={logout}
       />
     </div>
   );

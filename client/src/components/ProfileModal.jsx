@@ -1,6 +1,6 @@
 import { FileText, LogIn, UserPlus, LogOut, X } from "lucide-react";
 
-export function ProfileModal({ isOpen, onClose, user, onViewChange }) {
+export function ProfileModal({ isOpen, onClose, user, onViewChange, onLogout }) {
   if (!isOpen) return null;
 
   const handleOptionClick = (view) => {
@@ -9,42 +9,39 @@ export function ProfileModal({ isOpen, onClose, user, onViewChange }) {
   };
 
   return (
-    <div onClick={onClose} className="fixed inset-0 flex justify-center items-end bg-black/25 z-40">
+    <div onClick={onClose} className="fixed inset-0 flex justify-end items-end bg-black/25 z-40">
       <div
         onClick={(e) => e.stopPropagation()}
-        className="bg-white w-full max-w-sm h-auto shadow-xl p-4 flex flex-col rounded-t-lg"
+        className="bg-white w-auto max-w-sm h-auto shadow-xl pb-15 pl-4 rounded-t-lg"
       >
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-semibold text-gray-800">Profile</h2>
-          <button className="text-gray-500 hover:text-gray-800" onClick={onClose}>
-            <X size={20} />
-          </button>
-        </div>
-
-        <div className="space-y-3">
+        <div className="space-y-3 column justify-around items-center">
           {user ? (
             // logged in user options
             <>
-              <div className="p-3 bg-blue-50 rounded-lg">
+              <div className="p-3 bg-blue-50 rounded-lg shadow-md border-gray-300">
                 <p className="text-sm text-gray-600">Logged in as</p>
                 <p className="font-semibold text-blue-600">{user.name || user.email}</p>
               </div>
 
               <button
                 onClick={() => handleOptionClick("myads")}
-                className="w-full flex items-center gap-3 text-xs p-3 rounded transition-colors text-gray-800 hover:text-blue-600 hover:bg-gray-50"
+                className="w-full flex items-center gap-3 text-xs p-3 rounded shadow-md border-gray-300 transition-colors text-gray-800 hover:text-blue-600 hover:bg-gray-50"
               >
                 <FileText size={18} />
                 My Ads
               </button>
 
               <button
-                onClick={() => {
-                  // Add logout logic here later
-                  console.log("Logout clicked");
-                  onClose();
+                onClick={async () => {
+                  try {
+                    await onLogout();
+                    onClose();
+                  } catch (error) {
+                    console.error("Logout failed:", error);
+                    onClose(); // Close modal even if logout fails
+                  }
                 }}
-                className="w-full flex items-center gap-3 text-lg p-3 rounded transition-colors text-gray-800 hover:text-red-600 hover:bg-gray-50"
+                className="w-full flex items-center gap-3 text-lg p-3 rounded shadow-md border-gray-300 transition-colors text-gray-800 hover:text-red-600 hover:bg-gray-50"
               >
                 <LogOut size={18} />
                 Logout

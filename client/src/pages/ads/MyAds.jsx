@@ -1,21 +1,31 @@
 import { useEffect, useState } from "react";
 import { CalendarX2, MapPin, Eye, Trash2, CupSoda, Utensils } from "lucide-react";
+import { useAuth } from "../../hooks/useAuth.js";
 
 export default function MyAds() {
+  const { user } = useAuth();
   const [ads, setAds] = useState([]);
   const [msg, setMsg] = useState("");
 
   useEffect(() => {
+    // only fetch if user is logged in
+    if (!user) {
+      setMsg("Please log in to view your ads");
+      return;
+    }
+
     const url = import.meta.env.PROD ? "/api/ads/mine" : "http://localhost:8080/api/ads/mine";
     setMsg("loading...");
     fetch(url, { credentials: "include" })
       .then((res) => res.json())
       .then((data) => {
-        setAds(data.items || []);
+        // backend already filters by user, doublecheck client-side anyway
+        const userAds = (data.items || []).filter((ad) => ad.ownerId === user.id);
+        setAds(userAds);
         setMsg("");
       })
       .catch(() => setMsg("failed to load"));
-  }, []);
+  }, [user]);
 
   async function del(id) {
     if (!confirm("Are you sure you want to delete this ad?")) return;
@@ -30,13 +40,24 @@ export default function MyAds() {
   //   console.log(`View ad ${id}`);
   // };
 
+  // Show message if not logged in or loading
   if (msg) return <p className="text-center text-gray-500 p-8">{msg}</p>;
+
+  // Redirect to login if not authenticated
+  if (!user) {
+    return (
+      <div className="p-4 text-center">
+        <h2 className="text-xl text-gray-800 mb-4">Authentication Required</h2>
+        <p className="text-gray-600">Please log in to view your ads.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 space-y-4">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">My Ads</h1>
-        <p className="text-gray-600 text-sm">Manage your current ads.</p>
+      <div className="mb-6 text-center">
+        <h1 className="text-2xl font-bold text-white">My Ads</h1>
+        <p className="text-white text-sm">Manage your current ads.</p>
       </div>
 
       {ads.length > 0 ? (
@@ -44,6 +65,16 @@ export default function MyAds() {
           {ads.map((a) => (
             <div key={a.id} className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
               <div className="flex justify-between items-start gap-3">
+                {/* image thumbnail */}
+                {a.imageUrl && (
+                  <div className="flex-shrink-0">
+                    <img
+                      src={`${import.meta.env.PROD ? "" : "http://localhost:8080"}${a.imageUrl}`}
+                      alt={a.title}
+                      className="w-20 h-20 object-cover rounded-lg border border-gray-200"
+                    />
+                  </div>
+                )}
                 <div className="flex-1 min-w-0">
                   <h3 className="text-lg font-semibold text-gray-900 mb-1 truncate" title={a.title}>
                     {a.title}
@@ -90,16 +121,17 @@ export default function MyAds() {
                     {a.status}
                   </span>
 
-                  {/* view ad button soon to be added? and edit? */}
+                  {/* action buttons */}
                   <div className="flex gap-2">
-                    <button
-                      onClick={() => viewAd(a.id)}
+                    {/* view button - temporarily disabled until view functionality is implemented */}
+                    {/* <button
+                      onClick={() => console.log("View ad", a.id)}
                       className="flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100 transition-colors text-xs font-medium"
                       title="View ad details"
                     >
                       <Eye size={18} strokeWidth={1.5} />
                       View
-                    </button>
+                    </button> */}
                     {/* delete ad button */}
                     <button
                       onClick={() => del(a.id)}

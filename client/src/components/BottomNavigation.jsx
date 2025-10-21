@@ -35,7 +35,7 @@ export function BottomNavigation({ currentView, onViewChange }) {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-blue-700/90 backdrop-blur-md border-t border-black/20 shadow-lg z-50">
+    <nav className="fixed bottom-0 left-0 right-0 w-full bg-blue-700/90 backdrop-blur-md border-t border-black/20 shadow-lg z-50">
       <div className="flex">
         {navItems.map((item) => (
           <button
@@ -45,13 +45,13 @@ export function BottomNavigation({ currentView, onViewChange }) {
               currentView === item.key ? "text-white bg-black/25" : "text-white hover:text-blue-200"
             }`}
           >
-            <div className="flex flex-col items-center gap-1">
+            <div className="flex flex-col items-center gap-1 sm:gap-1">
               {currentView === item.key ? (
                 <item.activeIcon size={20} strokeWidth={2.5} />
               ) : (
                 <item.icon size={20} strokeWidth={1.5} />
               )}
-              <span className="text-xs font-medium">{item.label}</span>
+              <span className="text-xs font-medium hidden sm:block">{item.label}</span>
             </div>
           </button>
         ))}

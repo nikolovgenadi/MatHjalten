@@ -10,7 +10,8 @@ const adSchema = new mongoose.Schema(
     expiresAt: { type: Date, required: true },
     // maybe ill add it later, idk if i want it now createdAt: { type: Date, default: Date.now },
     status: { type: String, enum: ["available", "reserved", "unavailable"], default: "available" },
-    locationText: { type: String, required: true, trim: true, maxlength: 200 },
+    locationText: { type: String, required: true, trim: true },
+    imageUrl: { type: String, required: false }, // optional
   },
   { timestamps: true }
 );

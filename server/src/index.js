@@ -24,6 +24,9 @@ if (process.env.NODE_ENV !== "production") {
   app.use(cors({ origin: "http://localhost:5173", credentials: true }));
 }
 
+// Serve uploaded images statically
+app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
+
 // API routes
 app.use("/api/health", healthRouter);
 app.use("/api/auth", authRouter);

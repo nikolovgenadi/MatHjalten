@@ -8,28 +8,56 @@ export default function NewAd() {
     expiresAt: "",
     locationText: "",
   });
+  const [selectedImage, setSelectedImage] = useState(null);
   const [msg, setMsg] = useState("");
 
   const onChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
+  const onImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // to validate file type
+      if (file.type === "image/jpeg" || file.type === "image/png") {
+        setSelectedImage(file);
+      } else {
+        alert("Please select only JPEG or PNG images");
+        e.target.value = "";
+      }
+    }
+  };
+
   async function submit(e) {
     e.preventDefault();
     setMsg("loading...");
+
+    // Debug: Check form data before sending
+    console.log("Form data being sent:", form);
+    console.log("Selected image:", selectedImage);
+
     const url = import.meta.env.PROD ? "/api/ads" : "http://localhost:8080/api/ads";
+
+    // formData for file uploads
+    const formData = new FormData();
+    formData.append("title", form.title);
+    formData.append("description", form.description);
+    formData.append("category", form.category);
+    formData.append("expiresAt", form.expiresAt);
+    formData.append("locationText", form.locationText);
+
+    if (selectedImage) {
+      formData.append("image", selectedImage);
+    }
+
     const res = await fetch(url, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
       credentials: "include",
-      body: JSON.stringify({
-        title: form.title,
-        description: form.description,
-        category: form.category,
-        expiresAt: form.expiresAt,
-        locationText: form.locationText,
-      }),
+      body: formData,
     });
     const data = await res.json();
-    if (!res.ok) return setMsg(data.error || "an error occured");
+    if (!res.ok) {
+      console.error("Server error:", res.status, data);
+      return setMsg(data.error || `Error ${res.status}: ${data.message || "an error occured"}`);
+    }
 
     // Check if we have the ad data
     if (!data.ad || !data.ad.id) {
@@ -141,6 +169,31 @@ export default function NewAd() {
                           transition-all duration-300 shadow-inner hover:border-gray-300
                           placeholder-gray-400 text-gray-800"
               />
+            </div>
+
+            {/* image upload */}
+            <div className="group">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Photo (Optional)
+              </label>
+              <input
+                type="file"
+                name="image"
+                accept="image/jpeg,image/png"
+                onChange={onImageChange}
+                className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl 
+                          focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-100
+                          transition-all duration-300 shadow-inner hover:border-gray-300
+                          text-gray-800 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0
+                          file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700
+                          hover:file:bg-blue-100"
+              />
+              {selectedImage && (
+                <p className="text-sm text-green-600 mt-1">Selected: {selectedImage.name}</p>
+              )}
+              <p className="text-xs text-gray-500 mt-1">
+                Only JPEG and PNG files allowed. Max size: 5MB.
+              </p>
             </div>
 
             {/* submit form */}

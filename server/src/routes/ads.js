@@ -1,11 +1,42 @@
 import { Router } from "express";
 import { z } from "zod";
 import mongoose from "mongoose";
+import multer from "multer";
+import path from "path";
 import { Ad } from "../models/Ad.js";
 import { requireAuth } from "../middleware/requireAuth.js";
 import { ca } from "zod/v4/locales";
 
 const router = Router();
+
+// multer config for image upload
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "uploads/ads/");
+  },
+  filename: (req, file, cb) => {
+    // generate unique filename to be saved: timestamp-userid-originalname
+    const uniqueName = `${Date.now()}-${req.userId}-${file.originalname}`;
+    cb(null, uniqueName);
+  },
+});
+
+const fileFilter = (req, file, cb) => {
+  // only allow jpg and png files
+  if (file.mimetype === "image/jpeg" || file.mimetype === "image/png") {
+    cb(null, true);
+  } else {
+    cb(new Error("Only JPEG and PNG images are allowed"), false);
+  }
+};
+
+const upload = multer({
+  storage,
+  fileFilter,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB limit
+  },
+});
 
 // create ad
 const createAdSchema = z.object({
@@ -40,28 +71,38 @@ const listQuerySchema = z.object({
   title: z.string().min(1).max(100).optional(),
   category: z.string().min(1).max(50).optional(),
   location: z.string().min(1).max(100).optional(),
-  page: z.coerce.number().min(1).default(1),
-  limit: z.coerce.number().min(1).max(100).default(10),
 });
 
-// create ad auth required
-router.post("/", requireAuth, async (req, res) => {
+// create ad auth required with optional image upload
+router.post("/", requireAuth, upload.single("image"), async (req, res) => {
   try {
+    // when using FormData, all values = strings,so to validate them properly
     const body = createAdSchema.parse(req.body);
-    console.log("Creating ad for user:", req.userId); // Debug log
-    const doc = await Ad.create({
+    console.log("creating ad for user:", req.userId);
+
+    // build ad data
+    const adData = {
       ownerId: new mongoose.Types.ObjectId(req.userId),
       title: body.title,
       description: body.description,
       category: body.category,
       expiresAt: new Date(body.expiresAt),
       locationText: body.locationText,
-    });
-    console.log("Created ad:", doc._id, "for owner:", doc.ownerId); // Debug log
+    };
+
+    // Add image URL if file was uploaded
+    if (req.file) {
+      adData.imageUrl = `/uploads/ads/${req.file.filename}`;
+    }
+    // debug log
+    const doc = await Ad.create(adData);
+    console.log("Created ad:", doc._id, "for owner:", doc.ownerId);
     return res.status(201).json({ ad: serialize(doc) });
   } catch (err) {
     if (err instanceof z.ZodError)
       return res.status(400).json({ error: "invalid input", details: err.errors });
+    if (err.message === "Only JPEG and PNG images are allowed")
+      return res.status(400).json({ error: "Only JPEG and PNG images are allowed" });
     console.error(err);
     return res.status(500).json({ error: "server error" });
   }
@@ -162,6 +203,7 @@ function serialize(doc) {
     expiresAt: doc.expiresAt,
     status: doc.status,
     locationText: doc.locationText,
+    imageUrl: doc.imageUrl || null, // image URL if present
     createdAt: doc.createdAt,
     updatedAt: doc.updatedAt,
   };

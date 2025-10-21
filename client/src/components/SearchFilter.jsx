@@ -18,7 +18,7 @@ export function SearchFilter({ onFiltersChange }) {
   }, [searchTerm, category, status, sortByExpiry, onFiltersChange]);
 
   return (
-    <div className="bg-white p-4 shadow-sm border-b space-y-4">
+    <div className="bg-white p-4 rounded-b-lg shadow-md border border-gray-200 space-y-4">
       {/* search by user input */}
       <div className="relative">
         <Search

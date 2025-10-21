@@ -1,8 +1,10 @@
 import { useState } from "react";
+import { useAuth } from "../hooks/useAuth.js";
 
-export default function Login() {
+export default function Login({ onSuccess }) {
   const [form, setForm] = useState({ email: "", password: "" });
   const [msg, setMsg] = useState("");
+  const { checkAuth } = useAuth();
 
   const onChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
@@ -19,6 +21,12 @@ export default function Login() {
     const data = await res.json();
     if (!res.ok) return setMsg(data.error || "an error occured");
     setMsg(`welcome back ${data.user.name}!`);
+    // refresh the auth state
+    await checkAuth();
+    // redirect to main view after successful login
+    setTimeout(() => {
+      onSuccess && onSuccess();
+    }, 1500); // small delay to show the welcome message
   }
 
   return (
