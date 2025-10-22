@@ -1,6 +1,8 @@
 import { useState } from "react";
+import { useAds } from "../../hooks/useAds.js";
 
 export default function NewAd() {
+  const { addAd } = useAds();
   const [form, setForm] = useState({
     title: "",
     description: "",
@@ -65,8 +67,25 @@ export default function NewAd() {
       return setMsg("Ad created but couldn't redirect");
     }
 
-    setMsg("created ad");
-    window.location.href = `/ads/${data.ad.id}`;
+    // Add the new ad to the global state
+    addAd(data.ad);
+
+    setMsg("Ad created successfully!");
+
+    // Reset form
+    setForm({
+      title: "",
+      description: "",
+      category: "",
+      expiresAt: "",
+      locationText: "",
+    });
+    setSelectedImage(null);
+
+    // Clear the message after a delay
+    setTimeout(() => {
+      setMsg("");
+    }, 3000);
   }
 
   return (
@@ -220,8 +239,8 @@ export default function NewAd() {
               <div
                 className={`mt-4 p-4 text-center font-medium ${
                   msg.includes("error") || msg.includes("failed")
-                    ? "bg-red-50 text-red-700 border border-red-200"
-                    : "bg-red-50 text-red-700 border border-red-200"
+                    ? "bg-red-50 text-red-700"
+                    : "bg-green-50 text-green-700"
                 }`}
               >
                 {msg}

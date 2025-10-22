@@ -115,12 +115,9 @@ router.get("/", async (req, res) => {
     const query = listQuerySchema.parse(req.query);
     const filter = {};
     if (query.category) filter.category = query.category;
-    if (query.status != "reserved" && query.status != "unavailable") {
-      filter.status = "available";
-    }
-    const skip = (query.page - 1) * query.limit;
-    const docs = await Ad.find(filter).sort({ createdAt: -1 }).skip(skip).limit(query.limit);
-    return res.json({ items: docs.map(serialize), page: query.page, limit: query.limit });
+
+    const docs = await Ad.find(filter).sort({ createdAt: -1 });
+    return res.json({ items: docs.map(serialize) });
   } catch (err) {
     if (err instanceof z.ZodError)
       return res.status(400).json({ error: "invalid query", details: err.errors });
@@ -176,6 +173,30 @@ router.patch("/:id", requireAuth, async (req, res) => {
   } catch (err) {
     if (err instanceof z.ZodError)
       return res.status(400).json({ error: "invalid input", details: err.errors });
+    console.error(err);
+    return res.status(500).json({ error: "server error" });
+  }
+});
+
+// reserve an ad - any authenticated user can reserve an available ad
+router.patch("/:id/reserve", requireAuth, async (req, res) => {
+  if (!mongoose.isValidObjectId(req.params.id))
+    return res.status(400).json({ error: "invalid id" });
+  try {
+    const doc = await Ad.findById(req.params.id);
+    if (!doc) return res.status(404).json({ error: "ad not found" });
+
+    // Check if ad is available for reservation
+    if (doc.status !== "available") {
+      return res.status(400).json({ error: "ad is not available for reservation" });
+    }
+
+    // Update status to reserved
+    doc.status = "reserved";
+    await doc.save();
+
+    return res.json({ ad: serialize(doc) });
+  } catch (err) {
     console.error(err);
     return res.status(500).json({ error: "server error" });
   }

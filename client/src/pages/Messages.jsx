@@ -10,6 +10,11 @@ export default function Messages() {
             This feature is currently under development and will be available in a future update.
           </p>
         </div>
+        <img
+          src="/cricket.png"
+          alt="*Cricket image*"
+          className="w-full max-w-xs mx-auto mt-6 rounded-lg"
+        />
       </div>
     </div>
   );

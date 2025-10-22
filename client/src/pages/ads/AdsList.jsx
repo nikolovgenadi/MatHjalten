@@ -1,32 +1,19 @@
 import { useEffect, useState } from "react";
-import { CalendarX2, MapPin, CupSoda, Utensils } from "lucide-react";
+import { CalendarX2, MapPin, CupSoda, Utensils, Eye } from "lucide-react";
+import { useAds } from "../../hooks/useAds.js";
 
-export default function AdsList({ searchFilters }) {
-  const [allItems, setAllItems] = useState([]);
+export default function AdsList({ searchFilters, onAdSelect }) {
+  const { ads, loading, error } = useAds();
   const [filteredItems, setFilteredItems] = useState([]);
-  const [msg, setMsg] = useState("");
-
-  // fetch all ads ONCE only
-  useEffect(() => {
-    const url = import.meta.env.PROD ? "/api/ads" : "http://localhost:8080/api/ads";
-    setMsg("loading...");
-    fetch(url, { credentials: "include" })
-      .then((res) => res.json())
-      .then((data) => {
-        setAllItems(data.items || []);
-        setMsg("");
-      })
-      .catch(() => setMsg("failed to load"));
-  }, []);
 
   // filter and sort items
   useEffect(() => {
-    if (!searchFilters || !allItems.length) {
-      setFilteredItems(allItems);
+    if (!searchFilters) {
+      setFilteredItems(ads);
       return;
     }
 
-    let filtered = allItems.filter((item) => {
+    let filtered = ads.filter((item) => {
       //title
       const matchesSearch =
         searchFilters.searchTerm === "" ||
@@ -50,9 +37,10 @@ export default function AdsList({ searchFilters }) {
     }
 
     setFilteredItems(filtered);
-  }, [searchFilters, allItems]);
+  }, [searchFilters, ads]);
 
-  if (msg) return <p className="text-center text-gray-500">{msg}</p>;
+  if (loading) return <p className="text-center text-gray-500">Loading...</p>;
+  if (error) return <p className="text-center text-red-500">{error}</p>;
 
   return (
     <div className="p-4 space-y-4">
@@ -91,9 +79,9 @@ export default function AdsList({ searchFilters }) {
               </div>
 
               <div className="flex items-center justify-between text-xs">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 min-w-0 flex-1">
                   {/* category */}
-                  <span className="flex items-center gap-1 text-gray-600">
+                  <span className="flex items-center gap-1 text-gray-600 flex-shrink-0">
                     {a.category === "food" ? (
                       <Utensils size={14} className="text-blue-600" strokeWidth={1.5} />
                     ) : a.category === "drink" ? (
@@ -101,35 +89,43 @@ export default function AdsList({ searchFilters }) {
                     ) : (
                       ""
                     )}
-                    {a.category || "uncategorized"}
+                    <span className="truncate">{a.category || "uncategorized"}</span>
                   </span>
 
                   {/* exp date */}
-                  <span className="flex items-center gap-1 text-gray-600">
+                  <span className="flex items-center gap-1 text-gray-600 flex-shrink-0">
                     <CalendarX2 size={14} className="text-blue-600" strokeWidth={1.5} />
-                    {new Date(a.expiresAt).toLocaleDateString()}
+                    <span className="truncate">{new Date(a.expiresAt).toLocaleDateString()}</span>
                   </span>
                 </div>
 
-                {/* status */}
-                <span
-                  className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    a.status === "available"
-                      ? "bg-green-100 text-green-800"
-                      : a.status === "reserved"
-                      ? "bg-yellow-100 text-yellow-800"
-                      : "bg-red-100 text-red-800"
-                  }`}
-                >
-                  {a.status}
-                </span>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  {/* status */}
+                  <span
+                    className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      a.status === "available"
+                        ? "bg-green-100 text-green-800"
+                        : a.status === "reserved"
+                        ? "bg-yellow-100 text-yellow-800"
+                        : "bg-red-100 text-red-800"
+                    }`}
+                  >
+                    {a.status}
+                  </span>
+                  <button
+                    onClick={() => onAdSelect && onAdSelect(a)}
+                    className="text-white bg-blue-600 rounded-full py-1 px-2 text-xs font-medium hover:bg-blue-700 transition-colors"
+                  >
+                    View
+                  </button>
+                </div>
               </div>
             </div>
           ))}
         </div>
       ) : (
         <div className="text-center py-8">
-          <p className="text-gray-500">
+          <p className="text-white">
             {searchFilters?.searchTerm ||
             searchFilters?.category !== "all" ||
             searchFilters?.status !== "all"

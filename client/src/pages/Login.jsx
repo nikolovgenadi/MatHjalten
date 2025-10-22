@@ -35,7 +35,7 @@ export default function Login({ onSuccess }) {
       <form onSubmit={submit} className="space-y-4">
         <input
           name="email"
-          placeholder="Email"
+          placeholder="Enter your email"
           value={form.email}
           onChange={onChange}
           required
@@ -44,6 +44,7 @@ export default function Login({ onSuccess }) {
         <input
           name="password"
           type="password"
+          placeholder="Enter your password"
           value={form.password}
           onChange={onChange}
           required

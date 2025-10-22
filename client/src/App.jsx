@@ -10,11 +10,15 @@ import NewAd from "./pages/ads/NewAd.jsx";
 import Login from "./pages/Login.jsx";
 import Register from "./pages/Register.jsx";
 import Messages from "./pages/Messages.jsx";
+import AdDetail from "./pages/ads/AdDetail.jsx";
 
 export default function App() {
   const { user, logout } = useAuth();
   const [currentView, setCurrentView] = useState("viewads");
   const [profileModalOpen, setProfileModalOpen] = useState(false);
+  const [selectedAd, setSelectedAd] = useState(null);
+  const [adDetailModalOpen, setAdDetailModalOpen] = useState(false);
+
   const [searchFilters, setSearchFilters] = useState({
     searchTerm: "",
     category: "all",
@@ -24,7 +28,7 @@ export default function App() {
 
   const handleViewChange = (view) => {
     if (view === "profile") {
-      setCurrentView("profile");
+      // no change in current view, just open the profile modal
       setProfileModalOpen(true);
     } else {
       setCurrentView(view);
@@ -42,6 +46,16 @@ export default function App() {
     }
   };
 
+  const handleAdSelect = (ad) => {
+    setSelectedAd(ad);
+    setAdDetailModalOpen(true);
+  };
+
+  const handleAdDetailClose = () => {
+    setAdDetailModalOpen(false);
+    setSelectedAd(null);
+  };
+
   // render current view component
   const renderCurrentView = () => {
     switch (currentView) {
@@ -49,14 +63,14 @@ export default function App() {
         return (
           <>
             <Header />
-            <AdsList searchFilters={searchFilters} />
+            <AdsList searchFilters={searchFilters} onAdSelect={handleAdSelect} />
           </>
         );
       case "search":
         return (
           <>
             <SearchFilter onFiltersChange={setSearchFilters} />
-            <AdsList searchFilters={searchFilters} />
+            <AdsList searchFilters={searchFilters} onAdSelect={handleAdSelect} />
           </>
         );
       case "myads":
@@ -77,7 +91,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-blue-700 flex flex-col">
       {/* main content */}
-      <main className="flex-1 bg-blue-700 overflow-y-auto">{renderCurrentView()}</main>
+      <main className="flex-1 bg-blue-700 overflow-y-auto pb-24">{renderCurrentView()}</main>
 
       {/* bottom navigation */}
       <BottomNavigation currentView={currentView} onViewChange={handleViewChange} />
@@ -90,6 +104,9 @@ export default function App() {
         onViewChange={setCurrentView}
         onLogout={logout}
       />
+
+      {/* ad detail modal */}
+      <AdDetail isOpen={adDetailModalOpen} onClose={handleAdDetailClose} ad={selectedAd} />
     </div>
   );
 }
