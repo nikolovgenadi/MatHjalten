@@ -50,42 +50,60 @@ export default function NewAd() {
       formData.append("image", selectedImage);
     }
 
-    const res = await fetch(url, {
-      method: "POST",
-      credentials: "include",
-      body: formData,
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      console.error("Server error:", res.status, data);
-      return setMsg(data.error || `Error ${res.status}: ${data.message || "an error occured"}`);
+    try {
+      const res = await fetch(url, {
+        method: "POST",
+        credentials: "include",
+        body: formData,
+      });
+
+      // Check if the response is actually JSON
+      const contentType = res.headers.get("content-type");
+      let data;
+
+      if (contentType && contentType.includes("application/json")) {
+        data = await res.json();
+      } else {
+        // If not JSON, get the text response for debugging
+        const textResponse = await res.text();
+        console.error("Non-JSON response received:", textResponse);
+        return setMsg("Server error: Invalid response format. Please try again.");
+      }
+
+      if (!res.ok) {
+        console.error("Server error:", res.status, data);
+        return setMsg(data.error || `Error ${res.status}: ${data.message || "an error occurred"}`);
+      }
+
+      // Check if we have the ad data
+      if (!data.ad || !data.ad.id) {
+        console.error("Unexpected response:", data);
+        return setMsg("Ad created but couldn't redirect");
+      }
+
+      // Add the new ad to the global state
+      addAd(data.ad);
+
+      setMsg("Ad created successfully!");
+
+      // Reset form
+      setForm({
+        title: "",
+        description: "",
+        category: "",
+        expiresAt: "",
+        locationText: "",
+      });
+      setSelectedImage(null);
+
+      // Clear the message after a delay
+      setTimeout(() => {
+        setMsg("");
+      }, 3000);
+    } catch (error) {
+      console.error("Network or parsing error:", error);
+      setMsg("Network error: Please check your connection and try again.");
     }
-
-    // Check if we have the ad data
-    if (!data.ad || !data.ad.id) {
-      console.error("Unexpected response:", data);
-      return setMsg("Ad created but couldn't redirect");
-    }
-
-    // Add the new ad to the global state
-    addAd(data.ad);
-
-    setMsg("Ad created successfully!");
-
-    // Reset form
-    setForm({
-      title: "",
-      description: "",
-      category: "",
-      expiresAt: "",
-      locationText: "",
-    });
-    setSelectedImage(null);
-
-    // Clear the message after a delay
-    setTimeout(() => {
-      setMsg("");
-    }, 3000);
   }
 
   return (

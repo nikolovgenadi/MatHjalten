@@ -3,21 +3,45 @@ import { z } from "zod";
 import mongoose from "mongoose";
 import multer from "multer";
 import path from "path";
+import fs from "fs";
 import { Ad } from "../models/Ad.js";
 import { requireAuth } from "../middleware/requireAuth.js";
 import { ca } from "zod/v4/locales";
 
 const router = Router();
 
-// multer config for image upload
+// Ensure uploads directory exists (bug fix+preventative)
+const uploadsPath = path.join(process.cwd(), "uploads/ads/");
+try {
+  if (!fs.existsSync(uploadsPath)) {
+    fs.mkdirSync(uploadsPath, { recursive: true });
+  }
+} catch (err) {
+  console.error("Warning: Could not create uploads directory:", err);
+}
+
+// multer config for image upload (built in fs,cb)
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, "uploads/ads/");
+    try {
+      if (!fs.existsSync("uploads/ads/")) {
+        fs.mkdirSync("uploads/ads/", { recursive: true });
+      }
+      cb(null, "uploads/ads/");
+    } catch (err) {
+      console.error("Multer destination error:", err);
+      cb(err);
+    }
   },
   filename: (req, file, cb) => {
-    // generate unique filename to be saved: timestamp-userid-originalname
-    const uniqueName = `${Date.now()}-${req.userId}-${file.originalname}`;
-    cb(null, uniqueName);
+    try {
+      // generate unique filename to be saved: timestamp-userid-originalname
+      const uniqueName = `${Date.now()}-${req.userId}-${file.originalname}`;
+      cb(null, uniqueName);
+    } catch (err) {
+      console.error("Multer filename error:", err);
+      cb(err);
+    }
   },
 });
 
@@ -99,12 +123,33 @@ router.post("/", requireAuth, upload.single("image"), async (req, res) => {
     console.log("Created ad:", doc._id, "for owner:", doc.ownerId);
     return res.status(201).json({ ad: serialize(doc) });
   } catch (err) {
-    if (err instanceof z.ZodError)
+    console.error("Error creating ad:", err);
+
+    if (err instanceof z.ZodError) {
+      console.error("Validation error:", err.errors);
       return res.status(400).json({ error: "invalid input", details: err.errors });
-    if (err.message === "Only JPEG and PNG images are allowed")
+    }
+
+    if (err.message === "Only JPEG and PNG images are allowed") {
       return res.status(400).json({ error: "Only JPEG and PNG images are allowed" });
-    console.error(err);
-    return res.status(500).json({ error: "server error" });
+    }
+
+    // Multer errors
+    if (err.code === "ENOENT") {
+      console.error("File system error - directory doesn't exist");
+      return res.status(500).json({ error: "File upload configuration error" });
+    }
+
+    // MongoDB errors
+    if (err.name === "ValidationError") {
+      console.error("MongoDB validation error:", err.message);
+      return res.status(400).json({ error: "Database validation failed", details: err.message });
+    }
+
+    return res.status(500).json({
+      error: "server error",
+      details: process.env.NODE_ENV === "development" ? err.message : undefined,
+    });
   }
 });
 
